@@ -1,6 +1,7 @@
 {
   "name": "cmoney_table_filter_prototype",
   "version": "0.1.0",
+  "homepage": "https://monochrome5284.github.io/cmoney_table_filter_prototype",
   "private": true,
   "dependencies": {
     "@headlessui/react": "^2.2.7",
