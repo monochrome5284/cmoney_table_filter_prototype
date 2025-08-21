@@ -1,16 +1,13 @@
 {
   "files": {
-    "main.css": "/cmoney_table_filter_prototype/static/css/main.0bbd7770.css",
-    "main.js": "/cmoney_table_filter_prototype/static/js/main.93d52631.js",
-    "static/js/453.90cfa73b.chunk.js": "/cmoney_table_filter_prototype/static/js/453.90cfa73b.chunk.js",
-    "static/media/logo.svg": "/cmoney_table_filter_prototype/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "main.css": "/cmoney_table_filter_prototype/static/css/main.654e4e8f.css",
+    "main.js": "/cmoney_table_filter_prototype/static/js/main.6506e612.js",
     "index.html": "/cmoney_table_filter_prototype/index.html",
-    "main.0bbd7770.css.map": "/cmoney_table_filter_prototype/static/css/main.0bbd7770.css.map",
-    "main.93d52631.js.map": "/cmoney_table_filter_prototype/static/js/main.93d52631.js.map",
-    "453.90cfa73b.chunk.js.map": "/cmoney_table_filter_prototype/static/js/453.90cfa73b.chunk.js.map"
+    "main.654e4e8f.css.map": "/cmoney_table_filter_prototype/static/css/main.654e4e8f.css.map",
+    "main.6506e612.js.map": "/cmoney_table_filter_prototype/static/js/main.6506e612.js.map"
   },
   "entrypoints": [
-    "static/css/main.0bbd7770.css",
-    "static/js/main.93d52631.js"
+    "static/css/main.654e4e8f.css",
+    "static/js/main.6506e612.js"
   ]
 }
