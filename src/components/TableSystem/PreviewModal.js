@@ -266,44 +266,44 @@ const TablePreview = ({ table }) => {
           </div>
         </div>
       </div>
-
-     
-
+      
       {/* 響應式說明 */}
-      <div className="bg-green-50 p-3 rounded-lg">
-        <h5 className="text-sm font-medium text-green-900 mb-2">響應式設計</h5>
-        <div className="text-xs text-green-700 space-y-1">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center">
-            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
-              <div className="font-medium">手機</div>
-              <div className="text-xs">192px</div>
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-green-50 p-3 rounded-lg">
+          <h5 className="text-sm font-medium text-green-900 mb-2">響應式設計</h5>
+          <div className="text-xs text-green-700 space-y-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center">
+              <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+                <div className="font-medium">手機</div>
+                <div className="text-xs">192px</div>
+              </div>
+              <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+                <div className="font-medium">小平板</div>
+                <div className="text-xs">224px</div>
+              </div>
+              <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+                <div className="font-medium">平板</div>
+                <div className="text-xs">256px</div>
+              </div>
+              <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+                <div className="font-medium">筆電</div>
+                <div className="text-xs">288px</div>
+              </div>
+              <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+                <div className="font-medium">桌機</div>
+                <div className="text-xs">320px</div>
+              </div>
+              <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+                <div className="font-medium">大螢幕</div>
+                <div className="text-xs">384px</div>
+              </div>
             </div>
-            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
-              <div className="font-medium">小平板</div>
-              <div className="text-xs">224px</div>
+            <div className="mt-2 text-center">
+              <em>圖片以原始大小顯示，超出容器部分自動裁切</em>
             </div>
-            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
-              <div className="font-medium">平板</div>
-              <div className="text-xs">256px</div>
-            </div>
-            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
-              <div className="font-medium">筆電</div>
-              <div className="text-xs">288px</div>
-            </div>
-            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
-              <div className="font-medium">桌機</div>
-              <div className="text-xs">320px</div>
-            </div>
-            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
-              <div className="font-medium">大螢幕</div>
-              <div className="text-xs">384px</div>
-            </div>
-          </div>
-          <div className="mt-2 text-center">
-            <em>圖片以原始大小顯示，超出容器部分自動裁切</em>
           </div>
         </div>
-      </div>
+      )}
 
       {/* 開發調試資訊 */}
       {process.env.NODE_ENV === 'development' && (
