@@ -189,6 +189,11 @@ const TablePreview = ({ table }) => {
   const displayClasses = Array.isArray(table.classes) ? table.classes : [table.class].filter(Boolean);
   const displaySamples = Array.isArray(table.samples) ? table.samples : [table.sample].filter(Boolean);
 
+  // 動態獲取圖片路徑 - GitHub Pages 兼容
+  const getImagePath = () => {
+    return '/cmoney_table_filter_prototype/assets/table-preview-demo.png';
+  };
+
   const handleImageLoad = () => {
     setImageLoaded(true);
     setImageError(false);
@@ -201,18 +206,18 @@ const TablePreview = ({ table }) => {
 
   return (
     <div className="space-y-4">
-      {/* 固定圖片預覽區域 */}
+      {/* 響應式圖片預覽區域 */}
       <div className="border border-gray-200 rounded-lg overflow-hidden bg-gray-50">
-        <div className="relative w-full h-80 overflow-hidden bg-gray-100">
+        <div className="relative w-full h-56 sm:h-72 md:h-80 lg:h-88 xl:h-96 2xl:h-96 overflow-hidden bg-gray-100">
           
           {/* 預設顯示內容 - 當圖片未載入或載入失敗時顯示 */}
           {(!imageLoaded || imageError) && (
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-center">
-              <div className="text-center">
-                <BarChart3 className="w-16 h-16 text-blue-400 mx-auto mb-3" />
-                <p className="text-gray-700 font-medium text-lg mb-1">📊 {table.name}</p>
-                <p className="text-sm text-gray-500">表格預覽示意圖</p>
-                <div className="mt-3 px-4 py-2 bg-white bg-opacity-70 rounded-lg">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-50 to-purple-50 flex items-center justify-center z-10">
+              <div className="text-center px-4">
+                <BarChart3 className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 text-blue-400 mx-auto mb-3" />
+                <p className="text-gray-700 font-medium text-sm sm:text-base md:text-lg mb-1">📊 {table.name}</p>
+                <p className="text-xs sm:text-sm text-gray-500">表格預覽示意圖</p>
+                <div className="mt-3 px-3 py-2 bg-white bg-opacity-70 rounded-lg">
                   <p className="text-xs text-gray-600">
                     {table.market} • {table.aspect} • {displaySamples.join(', ')}
                   </p>
@@ -226,31 +231,104 @@ const TablePreview = ({ table }) => {
             </div>
           )}
           
-          {/* 實際圖片 - 按比例顯示 */}
+          {/* 實際圖片 - 原始大小顯示，超出部分裁切，左上角定位 */}
           <img
-            src="cmoney_table_filter_prototype/assets/table-preview-demo.png"
+            src={getImagePath()}
             alt="表格預覽示意圖"
-            className={`absolute inset-0 w-full h-full object-contain object-top transition-opacity duration-300 ${
-              imageLoaded && !imageError ? 'opacity-100' : 'opacity-0'
-            }`}
+            className="absolute inset-0 w-full h-full object-cover object-top"
             style={{
               imageRendering: 'crisp-edges',
-              objectPosition: 'left top'
+              objectPosition: 'left top',
+              objectFit: 'cover'
             }}
             onLoad={handleImageLoad}
             onError={handleImageError}
           />
           
-          {/* 浮水印 - 只在有圖片時顯示 */}
+          {/* 浮水印 - 只在有圖片時顯示，響應式大小 */}
           {imageLoaded && !imageError && (
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute top-4 right-4 bg-black bg-opacity-30 text-white px-3 py-1 rounded text-sm font-medium backdrop-blur-sm shadow-lg">
+            <div className="absolute inset-0 pointer-events-none z-20">
+              <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 bg-black bg-opacity-50 text-white px-2 py-1 sm:px-3 sm:py-1 rounded text-xs sm:text-sm font-medium backdrop-blur-sm shadow-lg">
                 示意圖
               </div>
             </div>
           )}
         </div>
+        
+        {/* 圖片資訊 */}
+        <div className="p-2 sm:p-3 bg-white border-t border-gray-200">
+          <div className="text-xs text-gray-500 text-center">
+            {imageLoaded && !imageError ? (
+              <>圖片模式 | {table.aspect} | {displaySamples.join(', ')}</>
+            ) : (
+              <>預設模式 | {table.aspect} | {displaySamples.join(', ')} | {displayClasses.join(', ')}</>
+            )}
+          </div>
+        </div>
       </div>
+
+     
+
+      {/* 響應式說明 */}
+      <div className="bg-green-50 p-3 rounded-lg">
+        <h5 className="text-sm font-medium text-green-900 mb-2">響應式設計</h5>
+        <div className="text-xs text-green-700 space-y-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 text-center">
+            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+              <div className="font-medium">手機</div>
+              <div className="text-xs">192px</div>
+            </div>
+            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+              <div className="font-medium">小平板</div>
+              <div className="text-xs">224px</div>
+            </div>
+            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+              <div className="font-medium">平板</div>
+              <div className="text-xs">256px</div>
+            </div>
+            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+              <div className="font-medium">筆電</div>
+              <div className="text-xs">288px</div>
+            </div>
+            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+              <div className="font-medium">桌機</div>
+              <div className="text-xs">320px</div>
+            </div>
+            <div className="bg-white bg-opacity-60 px-2 py-1 rounded">
+              <div className="font-medium">大螢幕</div>
+              <div className="text-xs">384px</div>
+            </div>
+          </div>
+          <div className="mt-2 text-center">
+            <em>圖片以原始大小顯示，超出容器部分自動裁切</em>
+          </div>
+        </div>
+      </div>
+
+      {/* 開發調試資訊 */}
+      {process.env.NODE_ENV === 'development' && (
+        <div className="bg-gray-50 p-2 rounded text-xs text-gray-500">
+          <div>圖片路徑: {getImagePath()}</div>
+          <div className="grid grid-cols-2 gap-2 mt-1">
+            <div>
+              圖片狀態: 
+              {imageLoaded && !imageError && <span className="text-green-600 ml-1">✓ 已載入</span>}
+              {imageError && <span className="text-red-600 ml-1">✗ 載入失敗</span>}
+              {!imageLoaded && !imageError && <span className="text-yellow-600 ml-1">⏳ 載入中</span>}
+            </div>
+            <div className="text-right">
+              當前斷點: <span className="font-mono">
+                <span className="sm:hidden">手機</span>
+                <span className="hidden sm:inline md:hidden">SM</span>
+                <span className="hidden md:inline lg:hidden">MD</span>
+                <span className="hidden lg:inline xl:hidden">LG</span>
+                <span className="hidden xl:inline 2xl:hidden">XL</span>
+                <span className="hidden 2xl:inline">2XL</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
