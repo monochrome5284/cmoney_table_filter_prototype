@@ -5,9 +5,6 @@ import { BarChart3, TrendingUp, Calendar, User, Image } from 'lucide-react';
 import Modal from '../common/Modal';
 import { APP_CONFIG } from '../../constants/config';
 
-// 功能開關控制
-const PREVIEW_MODAL_ENABLED = false; // 設置為 false 來隱藏功能
-
 /**
  * 表格預覽Modal組件
  * @param {Object} props - 組件props
@@ -17,6 +14,10 @@ const PREVIEW_MODAL_ENABLED = false; // 設置為 false 來隱藏功能
  * @param {Function} props.onGenerateReport - 生成報表回調
  * @returns {ReactNode}
  */
+
+// 功能開關控制
+const PREVIEW_MODAL_ENABLED = false; 
+
 const PreviewModal = ({ 
   isOpen, 
   onClose, 

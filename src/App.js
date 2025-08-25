@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Database, Upload, Settings, Filter, Search, X } from 'lucide-react';
+import ExcelFieldConverterPage from './components/DataConvert/ExcelFieldConverterPage';
+
 
 // 配置和數據
 import { APP_CONFIG } from './constants/config';
@@ -28,10 +30,10 @@ import { searchTables } from './utils/dataProcessor';
 const App = () => {
   // ===== 全局狀態管理 =====
   const [tableData, setTableData] = useState(DEFAULT_TABLE_DATA);
-  const [currentPage, setCurrentPage] = useState('main'); // main, convert, manage
+  const [currentPage, setCurrentPage] = useState('main'); // main, convert, manage, excel-field-convert
   
   // Modal狀態
-  const [showTableSystemModal, setShowTableSystemModal] = useState(false); // 表格查詢系統Modal
+  const [showTableSystemModal, setShowTableSystemModal] = useState(true); // 預設開啟 表格查詢系統Modal 
   const [showReportModal, setShowReportModal] = useState(false);
   const [selectedTable, setSelectedTable] = useState(null);
   
@@ -134,6 +136,16 @@ const App = () => {
     );
   }
 
+  if (currentPage === 'excel-field-convert') {
+    return (
+      <ExcelFieldConverterPage 
+        onBack={() => setCurrentPage('main')}
+        onDataConverted={handleDataUpdate}
+        tableData={tableData} // 重要：傳遞完整的 tableData 結構
+      />
+    );
+  }
+
   // ===== 主頁面渲染 =====
   return (
     <div className="min-h-screen bg-gray-50">
@@ -217,6 +229,30 @@ const App = () => {
                       </h3>
                       <p className="text-gray-600 text-sm leading-relaxed">
                         CSV轉換為系統格式
+                      </p>
+                    </div>
+                  </div>
+                </button>
+              )}
+
+              {/* Excel欄位數據轉換工具 - 開發者模式 */}
+              {isDeveloperMode && (
+                <button
+                  onClick={() => setCurrentPage('excel-field-convert')}
+                  className="w-full p-6 bg-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border-2 border-transparent hover:border-green-500 text-left group"
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition-colors">
+                        <Upload className="w-6 h-6 text-green-600" />
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-green-700 transition-colors">
+                        Excel欄位數據轉換工具
+                      </h3>
+                      <p className="text-gray-600 text-sm leading-relaxed">
+                        Excel轉換為系統格式
                       </p>
                     </div>
                   </div>
@@ -364,7 +400,7 @@ const App = () => {
                       type="text"
                       value={searchTerm}
                       onChange={(e) => handleSearchChange(e.target.value)}
-                      placeholder="搜尋資料表名稱、市場、面向、類別、樣本、欄位..."
+                      placeholder="搜尋..."
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     />
                     {searchTerm && (

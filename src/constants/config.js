@@ -30,13 +30,20 @@ export const APP_CONFIG = {
   PAGES: {
     MAIN: 'main',
     CONVERT: 'convert',
+    EXCEL_FIELD_CONVERT: 'excel-field-convert',
     MANAGE: 'manage',
   },
   
-  // 檔案處理
+  // CSV檔案處理
   FILE: {
     ACCEPTED_FORMATS: ['.json', '.csv'],
     MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+  },
+
+  // EXCEL檔案處理
+  EXCEL_FILE: {
+    ACCEPTED_FORMATS: ['.xlsx', '.xls'],
+    MAX_FILE_SIZE: 20 * 1024 * 1024, // 20MB
   },
   
   // 本地化設定
