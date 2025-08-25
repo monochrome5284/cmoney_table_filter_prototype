@@ -224,17 +224,6 @@ const ReportPreviewDiagram = ({ table }) => {
             </div>
           )}
         </div>
-        
-        {/* 圖片資訊 */}
-        <div className="p-2 sm:p-3 bg-white border-t border-gray-200">
-          <div className="text-xs text-gray-500 text-center">
-            {imageLoaded && !imageError ? (
-              <>圖片模式 | {table.aspect} | {displaySamples.join(', ')}</>
-            ) : (
-              <>預設模式 | {table.aspect} | {displaySamples.join(', ')} | {displayClasses.join(', ')}</>
-            )}
-          </div>
-        </div>
       </div>
 
       {/* 開發調試資訊 */}
