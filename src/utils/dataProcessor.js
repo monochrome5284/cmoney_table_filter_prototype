@@ -20,7 +20,6 @@ export const filterTables = (tableList, filters) => {
     // 類別篩選（AND邏輯：所選類別都必須包含在表格的類別中）
     if (classes && classes.length > 0) {
       const tableClasses = Array.isArray(table.classes) ? table.classes : [table.class];
-      // 檢查所有選中的類別是否都在表格的類別中
       const hasAllClasses = classes.every(selectedClass => 
         tableClasses.includes(selectedClass)
       );
@@ -30,16 +29,17 @@ export const filterTables = (tableList, filters) => {
     // 樣本篩選（AND邏輯：所選樣本都必須包含在表格的樣本中）
     if (samples && samples.length > 0) {
       const tableSamples = Array.isArray(table.samples) ? table.samples : [table.sample];
-      // 檢查所有選中的樣本是否都在表格的樣本中
       const hasAllSamples = samples.every(selectedSample => 
         tableSamples.includes(selectedSample)
       );
       if (!hasAllSamples) return false;
     }
     
-    // 關鍵字搜尋
+    // 關鍵字搜尋 - 新增欄位搜尋支援
     if (searchTerm && searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
+      
+      // 原有搜尋範圍
       const nameMatch = table.name.toLowerCase().includes(searchLower);
       const marketMatch = table.market.toLowerCase().includes(searchLower);
       const aspectMatch = table.aspect.toLowerCase().includes(searchLower);
@@ -56,13 +56,76 @@ export const filterTables = (tableList, filters) => {
         sample && sample.toLowerCase().includes(searchLower)
       );
       
-      if (!nameMatch && !marketMatch && !aspectMatch && !classMatch && !sampleMatch) {
+      // 搜尋欄位名稱
+      const fieldsMatch = table.fields && table.fields.some(field => 
+        (field.name && field.name.toLowerCase().includes(searchLower)) ||
+        (field.description && field.description.toLowerCase().includes(searchLower))
+      );
+
+      
+      if (!nameMatch && !marketMatch && !aspectMatch && !classMatch && !sampleMatch && !fieldsMatch) {
         return false;
       }
     }
     
     return true;
   });
+};
+
+/**
+ * 純搜尋函數（不依賴篩選器）
+ * @param {Array} tableList - 表格清單
+ * @param {string} searchTerm - 搜尋關鍵字
+ * @returns {Array} 搜尋結果
+ */
+export const searchTables = (tableList, searchTerm) => {
+  if (!searchTerm || !searchTerm.trim()) {
+    return tableList;
+  }
+  
+  const searchLower = searchTerm.toLowerCase();
+  
+  return tableList.filter(table => {
+    // 搜尋資料表名稱
+    const nameMatch = table.name.toLowerCase().includes(searchLower);
+    
+    // 搜尋市場
+    const marketMatch = table.market.toLowerCase().includes(searchLower);
+    
+    // 搜尋面向
+    const aspectMatch = table.aspect.toLowerCase().includes(searchLower);
+    
+    // 搜尋類別
+    const tableClasses = Array.isArray(table.classes) ? table.classes : [table.class];
+    const classMatch = tableClasses.some(cls => 
+      cls && cls.toLowerCase().includes(searchLower)
+    );
+    
+    // 搜尋樣本
+    const tableSamples = Array.isArray(table.samples) ? table.samples : [table.sample];
+    const sampleMatch = tableSamples.some(sample => 
+      sample && sample.toLowerCase().includes(searchLower)
+    );
+    
+    // 搜尋欄位（包含欄位名稱和描述）
+    const fieldsMatch = table.fields && table.fields.some(field => 
+      (field.name && field.name.toLowerCase().includes(searchLower)) ||
+      (field.description && field.description.toLowerCase().includes(searchLower))
+    );
+    
+    return nameMatch || marketMatch || aspectMatch || classMatch || sampleMatch || fieldsMatch;
+  });
+};
+
+
+// 搜尋高亮函數
+export const highlightSearchTerm = (text, searchTerm) => {
+  if (!searchTerm || !searchTerm.trim()) {
+    return text;
+  }
+  
+  const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+  return text.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
 };
 
 /**
@@ -159,21 +222,26 @@ export const resetSubsequentFilters = (changedLevel, currentFilters, defaults = 
  * @param {number} filteredCount - 篩選後數量
  * @returns {Object} 篩選摘要
  */
-export const generateFilterSummary = (filters, totalCount, filteredCount) => {
+export const generateFilterSummary = (filters, totalCount, filteredCount, isSearchMode = false) => {
   const { market, aspect, classes, samples, searchTerm } = filters;
   
   const activeFilters = [];
   
-  if (market) activeFilters.push(`市場: ${market}`);
-  if (aspect) activeFilters.push(`面向: ${aspect}`);
-  if (classes && classes.length > 0) {
-    activeFilters.push(`類別: ${classes.length} 項`);
-  }
-  if (samples && samples.length > 0) {
-    activeFilters.push(`樣本: ${samples.length} 項`);
-  }
-  if (searchTerm && searchTerm.trim()) {
-    activeFilters.push(`搜尋: "${searchTerm}"`);
+  if (isSearchMode) {
+    // 搜尋模式下只顯示搜尋資訊
+    if (searchTerm && searchTerm.trim()) {
+      activeFilters.push(`搜尋: "${searchTerm}"`);
+    }
+  } else {
+    // 篩選模式下顯示篩選器資訊
+    if (market) activeFilters.push(`市場: ${market}`);
+    if (aspect) activeFilters.push(`面向: ${aspect}`);
+    if (classes && classes.length > 0) {
+      activeFilters.push(`類別: ${classes.length} 項`);
+    }
+    if (samples && samples.length > 0) {
+      activeFilters.push(`樣本: ${samples.length} 項`);
+    }
   }
   
   return {
@@ -181,7 +249,8 @@ export const generateFilterSummary = (filters, totalCount, filteredCount) => {
     activeCount: activeFilters.length,
     totalCount,
     filteredCount,
-    filterRate: totalCount > 0 ? (filteredCount / totalCount * 100).toFixed(1) : 0
+    filterRate: totalCount > 0 ? (filteredCount / totalCount * 100).toFixed(1) : 0,
+    mode: isSearchMode ? 'search' : 'filter'
   };
 };
 

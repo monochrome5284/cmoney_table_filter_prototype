@@ -108,58 +108,55 @@ const Modal = ({
 
   return (
     <div
-      ref={overlayRef}
-      className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4`}
-      style={{ zIndex }}
-      onClick={handleOverlayClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={title ? 'modal-title' : undefined}
+    ref={overlayRef}
+    className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center`}  // 移除 p-4
+    style={{ zIndex }}
+    onClick={handleOverlayClick}
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby={title ? "modal-title" : undefined}
+  >
+    <div
+      ref={modalRef}
+      className={`bg-white rounded-lg shadow-xl w-full mx-auto outline-none ${
+        size === 'full' ? 'h-full max-w-none max-h-none m-0 rounded-none' : `${sizeClasses[size]} mx-4`  // 全螢幕時移除邊距和圓角
+      } ${className}`}
+      style={{
+        maxHeight: size === 'full' ? '100vh' : maxHeight  // 全螢幕時使用 100vh
+      }}
+      tabIndex={-1}
     >
-      <div
-        ref={modalRef}
-        className={`
-          bg-white rounded-lg w-full shadow-xl
-          ${sizeClasses[size]}
-          ${className}
-        `}
-        style={{ maxHeight }}
-        tabIndex={-1}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        {(title || showCloseButton) && (
-          <div className="p-4 border-b border-gray-200 flex items-center justify-between shrink-0">
-            {title && (
-              <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
-                {title}
-              </h2>
-            )}
-            {showCloseButton && (
-              <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
-                aria-label="關閉對話框"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="flex-1 overflow-auto">
-          {children}
+      {/* 標題欄 - 只在非全螢幕且有標題時顯示 */}
+      {title && size !== 'full' && (
+        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+          <h2 id="modal-title" className="text-xl font-semibold text-gray-900">
+            {title}
+          </h2>
+          {showCloseButton && (
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+              aria-label="關閉對話框"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          )}
         </div>
+      )}
 
-        {/* Footer */}
-        {footer && (
-          <div className="p-4 border-t border-gray-200 shrink-0">
-            {footer}
-          </div>
-        )}
+      {/* 內容區域 */}
+      <div className={size === 'full' ? 'h-full' : 'max-h-96 overflow-y-auto'}>  {/* 全螢幕時使用 h-full */}
+        {children}
       </div>
+
+      {/* 底部區域 - 只在非全螢幕時顯示 */}
+      {footer && size !== 'full' && (
+        <div className="px-6 py-4 border-t border-gray-200">
+          {footer}
+        </div>
+      )}
     </div>
+  </div>
   );
 };
 

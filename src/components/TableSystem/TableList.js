@@ -1,8 +1,7 @@
-// src/components/TableSystem/TableList.js
-// 表格列表展示組件
+// src/components/TableSystem/TableList.js 修正版本
 
-import React from 'react';
-import { List, Eye, FileText } from 'lucide-react';
+import React, { useState } from 'react';
+import { List, FileText, Database } from 'lucide-react';
 
 /**
  * 表格列表組件
@@ -11,14 +10,35 @@ import { List, Eye, FileText } from 'lucide-react';
  * @param {number} props.totalCount - 總表格數
  * @param {Function} props.onTablePreview - 表格預覽回調
  * @param {boolean} props.loading - 載入狀態
+ * @param {string} props.searchTerm - 搜尋關鍵字
+ * @param {boolean} props.isSearchMode - 搜尋模式
+ * @param {number} props.fieldsDisplayCount - 欄位顯示數量
  * @returns {ReactNode}
  */
 const TableList = ({ 
   tables = [], 
   totalCount = 0, 
-  onTablePreview, 
-  loading = false 
+  onTablePreview,
+  loading = false,
+  searchTerm = '',
+  isSearchMode = false,
+  fieldsDisplayCount = 5  // 預設顯示 5 個欄位
 }) => {
+  // 修正：將 useState 移到組件內部
+  const [expandedFields, setExpandedFields] = useState(new Set());
+
+  // 欄位展開/收合函數
+  const toggleFieldsExpansion = (tableId) => {
+    setExpandedFields(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(tableId)) {
+        newSet.delete(tableId);
+      } else {
+        newSet.add(tableId);
+      }
+      return newSet;
+    });
+  };
   
   // 獲取標籤顏色
   const getTagColor = (type, value) => {
@@ -87,6 +107,11 @@ const TableList = ({
           <span className="text-sm text-gray-600">
             顯示 <span className="font-medium text-gray-900">{tables.length}</span> / <span className="font-medium text-gray-900">{totalCount}</span> 個表格
           </span>
+          {isSearchMode && searchTerm && (
+            <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+              搜尋: "{searchTerm}"
+            </span>
+          )}
         </div>
         <div className="flex items-center space-x-2">
           <List className="w-4 h-4 text-purple-600" />
@@ -96,7 +121,7 @@ const TableList = ({
 
       {/* 表格清單 */}
       {tables.length === 0 ? (
-        <EmptyState />
+        <EmptyState searchTerm={searchTerm} isSearchMode={isSearchMode} />
       ) : (
         <div className="space-y-3">
           {tables.map(table => (
@@ -105,6 +130,9 @@ const TableList = ({
               table={table} 
               onPreview={onTablePreview}
               getTagColor={getTagColor}
+              fieldsDisplayCount={fieldsDisplayCount}
+              expandedFields={expandedFields}
+              toggleFieldsExpansion={toggleFieldsExpansion}
             />
           ))}
         </div>
@@ -116,8 +144,15 @@ const TableList = ({
 /**
  * 表格卡片組件
  */
-const TableCard = ({ table, onPreview, getTagColor }) => {
-  //載入、處理多類別和多樣本顯示
+const TableCard = ({ 
+  table, 
+  onPreview, 
+  getTagColor, 
+  fieldsDisplayCount,
+  expandedFields,
+  toggleFieldsExpansion
+}) => {
+  // 處理多類別和多樣本顯示
   const displayClasses = Array.isArray(table.classes) ? table.classes : [table.class].filter(Boolean);
   const displaySamples = Array.isArray(table.samples) ? table.samples : [table.sample].filter(Boolean);
 
@@ -130,8 +165,8 @@ const TableCard = ({ table, onPreview, getTagColor }) => {
             {table.name}
           </h3>
           
-          
-          <div className="flex flex-wrap gap-1">
+          {/* 標籤區 */}
+          <div className="flex flex-wrap gap-1 mb-3">
             {/* 市場標籤 */}
             <span className={`px-2 py-1 text-xs rounded ${getTagColor('market', table.market)}`}>
               {table.market}
@@ -145,7 +180,7 @@ const TableCard = ({ table, onPreview, getTagColor }) => {
                 displayClasses.map((cls, index) => (
                   <span 
                     key={index}
-                    className={`px-2 py-1 text-xs font-medium rounded-md border ${getTagColor('class', table.class)}`}
+                    className={`px-2 py-1 text-xs font-medium rounded-md border ${getTagColor('class', cls)}`}
                   >
                     {cls}
                   </span>
@@ -156,13 +191,48 @@ const TableCard = ({ table, onPreview, getTagColor }) => {
                 displaySamples.map((sample, index) => (
                   <span 
                     key={index}
-                    className={`px-2 py-1 text-xs font-medium rounded-md border ${getTagColor('sample', table.sample)}`}
+                    className={`px-2 py-1 text-xs font-medium rounded-md border ${getTagColor('sample', sample)}`}
                   >
                     {sample}
                   </span>
                 ))
             )} 
           </div>
+
+          {/* 欄位預覽 - 新增 */}
+          {table.fields && table.fields.length > 0 && (
+            <div className="mt-3">
+              <div className="text-xs text-gray-600 mb-1">
+                欄位（共 {table.fields.length} 個）：
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {table.fields
+                  .slice(0, expandedFields.has(table.id) ? table.fields.length : fieldsDisplayCount)
+                  .map((field, index) => (
+                    <span 
+                      key={index}
+                      className="px-2 py-1 text-xs bg-gray-50 text-gray-700 border border-gray-200 rounded"
+                      title={field.description || field.name}
+                    >
+                      {field.name}
+                    </span>
+                  ))}
+                
+                {/* 展開/收合按鈕 */}
+                {table.fields.length > fieldsDisplayCount && (
+                  <button
+                    onClick={() => toggleFieldsExpansion(table.id)}
+                    className="px-2 py-1 text-xs text-purple-600 hover:text-purple-700 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
+                  >
+                    {expandedFields.has(table.id) 
+                      ? `收合 (${table.fields.length - fieldsDisplayCount})` 
+                      : `更多 +${table.fields.length - fieldsDisplayCount}`
+                    }
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
            
           {/* 時間資訊 
           <div className="mt-2 text-xs text-gray-500">
@@ -171,7 +241,7 @@ const TableCard = ({ table, onPreview, getTagColor }) => {
           */}
         </div>
         
-        {/* 預覽按鈕 */}
+        {/* 產生報表按鈕 - 修改 */}
         <button
           onClick={() => onPreview(table)}
           className="ml-6 flex items-center space-x-2 px-4 py-3 rounded-xl font-medium transition-all transform hover:scale-105 active:scale-95 shadow-lg border-2 border-transparent"
@@ -187,9 +257,9 @@ const TableCard = ({ table, onPreview, getTagColor }) => {
             e.target.style.backgroundColor = '#6366f1';
             e.target.style.color = 'white';
           }}
-          aria-label={`預覽 ${table.name}`}
+          aria-label={`產生 ${table.name} 自訂報表`}
         >
-          <Eye 
+          <FileText
             className="w-4 h-4" 
             style={{ backgroundColor: 'transparent', color: 'inherit' }} 
           />
@@ -197,7 +267,7 @@ const TableCard = ({ table, onPreview, getTagColor }) => {
             className="text-sm font-medium"
             style={{ backgroundColor: 'transparent', color: 'inherit' }}
           >
-            預覽
+            產生自訂報表  {/* 修改按鈕文字 */}
           </span>
         </button>
       </div>
@@ -208,19 +278,37 @@ const TableCard = ({ table, onPreview, getTagColor }) => {
 /**
  * 空狀態組件
  */
-const EmptyState = () => {
+const EmptyState = ({ searchTerm, isSearchMode }) => {
   return (
     <div className="text-center py-12">
-      <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <h3 className="text-lg font-medium text-gray-900 mb-2">沒有符合條件的表格</h3>
-      <p className="text-gray-500 mb-4">請調整篩選條件或重設篩選器</p>
+      <Database className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+      <h3 className="text-lg font-medium text-gray-900 mb-2">
+        {isSearchMode ? '沒有符合搜尋條件的表格' : '沒有符合條件的表格'}
+      </h3>
+      <p className="text-gray-500 mb-4">
+        {isSearchMode 
+          ? `找不到包含 "${searchTerm}" 的表格`
+          : '請調整篩選條件或重設篩選器'
+        }
+      </p>
       <div className="text-sm text-gray-400">
         <p>建議：</p>
         <ul className="mt-2 space-y-1">
-          <li>• 嘗試選擇不同的市場或面向</li>
-          <li>• 減少類別或樣本的選擇</li>
-          <li>• 清空搜尋關鍵字</li>
-          <li>• 點擊「重設所有篩選」重新開始</li>
+          {isSearchMode ? (
+            <>
+              <li>• 嘗試使用不同的關鍵字</li>
+              <li>• 檢查搜尋字詞的拼寫</li>
+              <li>• 嘗試搜尋相關的欄位名稱</li>
+              <li>• 清空搜尋關鍵字重新開始</li>
+            </>
+          ) : (
+            <>
+              <li>• 嘗試選擇不同的市場或面向</li>
+              <li>• 減少類別或樣本的選擇</li>
+              <li>• 嘗試搜尋相關的欄位名稱</li>
+              <li>• 點擊「重設所有篩選」重新開始</li>
+            </>
+          )}
         </ul>
       </div>
     </div>

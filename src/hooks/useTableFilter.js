@@ -6,7 +6,8 @@ import {
   getAvailableClasses, 
   getAvailableSamples,
   validateFilterDependencies,
-  generateFilterSummary
+  generateFilterSummary,
+  searchTables
 } from '../utils/dataProcessor';
 import { APP_CONFIG } from '../constants/config';
 
@@ -24,6 +25,8 @@ export const useTableFilter = (tableData) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // UI狀態
+  const [isSearchMode, setIsSearchMode] = useState(false);
+  const [savedFilterState, setSavedFilterState] = useState(null);
   const [showClassDropdown, setShowClassDropdown] = useState(false);
   const [showSampleDropdown, setShowSampleDropdown] = useState(false);
 
@@ -32,6 +35,8 @@ export const useTableFilter = (tableData) => {
     return tableData.classOptions?.[selectedMarket]?.[selectedAspect] || [];
   }, [tableData.classOptions, selectedMarket, selectedAspect]);
 
+
+  
   const availableSamples = useMemo(() => {
     // 先根據前3層篩選出符合條件的表格
     const filteredByFirst3Layers = tableData.tableList.filter(table => {
@@ -65,6 +70,10 @@ export const useTableFilter = (tableData) => {
 
   // 篩選表格
   const filteredTables = useMemo(() => {
+    // 搜尋模式：使用純搜尋邏輯
+    if (isSearchMode) {
+      return searchTables(tableData.tableList, searchTerm);
+    }
     return tableData.tableList.filter(table => {
       // 市場篩選
       if (selectedMarket && table.market !== selectedMarket) return false;
@@ -107,7 +116,7 @@ export const useTableFilter = (tableData) => {
       
       return true;
     });
-  }, [tableData.tableList, selectedMarket, selectedAspect, selectedClasses, selectedSamples, searchTerm]);
+  }, [tableData.tableList, selectedMarket, selectedAspect, selectedClasses, selectedSamples, searchTerm, isSearchMode]);
 
   // 篩選摘要
   const filterSummary = useMemo(() => {
@@ -119,11 +128,17 @@ export const useTableFilter = (tableData) => {
       searchTerm
     };
     
-    return generateFilterSummary(filters, tableData.tableList.length, filteredTables.length);
-  }, [selectedMarket, selectedAspect, selectedClasses, selectedSamples, searchTerm, tableData.tableList.length, filteredTables.length]);
+    return generateFilterSummary(
+      filters, 
+      tableData.tableList.length, 
+      filteredTables.length,
+      isSearchMode  // 新增：搜尋模式參數
+    );
+  }, [selectedMarket, selectedAspect, selectedClasses, selectedSamples, searchTerm, tableData.tableList.length, filteredTables.length, isSearchMode]);
 
-  // 市場變更處理
+  // 市場變更處理(搜尋模式時禁用)
   const handleMarketChange = useCallback((market) => {
+    if (isSearchMode) return;  // 搜尋模式時直接返回
     setSelectedMarket(market);
     
     // 重置下層篩選器
@@ -135,7 +150,7 @@ export const useTableFilter = (tableData) => {
     // 關閉下拉選單
     setShowClassDropdown(false);
     setShowSampleDropdown(false);
-  }, [tableData.aspects]);
+  }, [tableData.aspects, isSearchMode]);
 
   // 面向變更處理
   const handleAspectChange = useCallback((aspect) => {
@@ -177,7 +192,43 @@ export const useTableFilter = (tableData) => {
   // 搜尋處理
   const handleSearchChange = useCallback((term) => {
     setSearchTerm(term);
-  }, []);
+    
+    if (term.trim()) {
+      // 進入搜尋模式
+      if (!isSearchMode) {
+        // 保存當前篩選狀態
+        setSavedFilterState({
+          market: selectedMarket,
+          aspect: selectedAspect,
+          classes: selectedClasses,
+          samples: selectedSamples
+        });
+        
+        // 清空篩選器
+        setSelectedMarket('');
+        setSelectedAspect('');
+        setSelectedClasses([]);
+        setSelectedSamples([]);
+      }
+      setIsSearchMode(true);
+    } else {
+      // 退出搜尋模式
+      setIsSearchMode(false);
+      
+      // 恢復篩選狀態
+      if (savedFilterState) {
+        setSelectedMarket(savedFilterState.market);
+        setSelectedAspect(savedFilterState.aspect);
+        setSelectedClasses(savedFilterState.classes);
+        setSelectedSamples(savedFilterState.samples);
+        setSavedFilterState(null);
+      } else {
+        // 如果沒有保存狀態，回到預設值
+        setSelectedMarket(APP_CONFIG.FILTER.DEFAULT_MARKET);
+        setSelectedAspect(APP_CONFIG.FILTER.DEFAULT_ASPECT);
+      }
+    }
+  }, [isSearchMode, savedFilterState, selectedMarket, selectedAspect, selectedClasses, selectedSamples]);
 
   // 重設所有篩選器
   const resetAllFilters = useCallback(() => {
@@ -186,6 +237,8 @@ export const useTableFilter = (tableData) => {
     setSelectedClasses([]);
     setSelectedSamples([]);
     setSearchTerm('');
+    setIsSearchMode(false);  
+    setSavedFilterState(null); 
     setShowClassDropdown(false);
     setShowSampleDropdown(false);
   }, []);
@@ -194,6 +247,11 @@ export const useTableFilter = (tableData) => {
   const resetSearch = useCallback(() => {
     setSearchTerm('');
   }, []);
+
+  // 清空搜尋函數
+  const clearSearch = useCallback(() => {
+    handleSearchChange('');
+  }, [handleSearchChange]);
 
   // 批量選擇類別
   const selectAllClasses = useCallback(() => {
@@ -283,17 +341,21 @@ export const useTableFilter = (tableData) => {
     selectedClasses,
     selectedSamples,
     searchTerm,
+
+    // 搜尋相關狀態
+    isSearchMode,
+    savedFilterState,
     
     // UI狀態
     showClassDropdown,
     showSampleDropdown,
     
     // 計算狀態
-    availableClasses,
-    availableSamples,
+    availableClasses: isSearchMode ? [] : availableClasses,  // 搜尋模式時清空
+    availableSamples: isSearchMode ? [] : availableSamples,  // 搜尋模式時清空
     filteredTables,
     filterSummary,
-    hasActiveFilters,
+    hasActiveFilters: hasActiveFilters || isSearchMode,
     
     // 事件處理器
     handleMarketChange,
@@ -305,6 +367,7 @@ export const useTableFilter = (tableData) => {
     // 控制方法
     resetAllFilters,
     resetSearch,
+    clearSearch,
     selectAllClasses,
     clearClassSelection,
     selectAllSamples,

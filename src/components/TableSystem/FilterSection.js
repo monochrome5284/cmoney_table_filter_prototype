@@ -1,5 +1,4 @@
-// src/components/TableSystem/FilterSection.js
-// 篩選器區域組件
+// src/components/TableSystem/FilterSection.js 修正版本
 
 import React from 'react';
 import { Search } from 'lucide-react';
@@ -11,15 +10,22 @@ import Dropdown from '../common/Dropdown';
  * @param {Object} props.tableData - 表格數據
  * @param {Object} props.filterState - 篩選狀態
  * @param {Object} props.filterActions - 篩選操作方法
+ * @param {boolean} props.isSearchMode - 搜尋模式
+ * @param {string} props.searchTerm - 搜尋關鍵字 (移除重複宣告)
  * @returns {ReactNode}
  */
-const FilterSection = ({ tableData, filterState, filterActions }) => {
+const FilterSection = ({ 
+  tableData, 
+  filterState, 
+  filterActions,
+  isSearchMode = false,
+  searchTerm = ''  // 修正：移除重複宣告，這裡是參數解構
+}) => {
   const {
     selectedMarket,
     selectedAspect,
     selectedClasses,
     selectedSamples,
-    searchTerm,
     availableClasses,
     availableSamples,
     filterSummary,
@@ -31,7 +37,6 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
     handleAspectChange,
     handleClassToggle,
     handleSampleToggle,
-    handleSearchChange,
     resetAllFilters,
     selectAllClasses,
     clearClassSelection,
@@ -41,6 +46,21 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
 
   return (
     <div className="space-y-6">
+      {/* 搜尋模式提示 */}
+      {isSearchMode && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-yellow-600" />
+            <span className="text-sm text-yellow-800">
+              搜尋模式：正在搜尋 "{searchTerm}"
+            </span>
+          </div>
+          <p className="text-xs text-yellow-600 mt-1">
+            篩選器已暫時停用，清空搜尋可重新啟用篩選功能
+          </p>
+        </div>
+      )}
+
       {/* 市場類型篩選 */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -50,14 +70,17 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
           {tableData.markets.map(market => (
             <button
               key={market}
-              onClick={() => handleMarketChange(market)}
+              onClick={() => !isSearchMode && handleMarketChange(market)}
+              disabled={isSearchMode}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all transform hover:scale-105 ${
+                isSearchMode ? 'opacity-50 cursor-not-allowed' : ''
+              } ${
                 selectedMarket === market
                   ? 'text-white shadow-lg'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
               style={{
-                backgroundColor: selectedMarket === market ? '#4f46e5' : undefined // 使用 primary-600
+                backgroundColor: selectedMarket === market && !isSearchMode ? '#4f46e5' : undefined
               }}
             >
               {market}
@@ -75,14 +98,17 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
           {tableData.aspects.map(aspect => (
             <button
               key={aspect}
-              onClick={() => handleAspectChange(aspect)}
+              onClick={() => !isSearchMode && handleAspectChange(aspect)}
+              disabled={isSearchMode}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all transform hover:scale-105 ${
+                isSearchMode ? 'opacity-50 cursor-not-allowed' : ''
+              } ${
                 selectedAspect === aspect
                   ? 'text-white shadow-lg'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
               style={{
-                backgroundColor: selectedAspect === aspect ? '#7c3aed' : undefined // 使用 secondary-700
+                backgroundColor: selectedAspect === aspect && !isSearchMode ? '#7c3aed' : undefined
               }}
             >
               {aspect}
@@ -98,6 +124,8 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
           options={availableClasses}
           value={selectedClasses}
           onChange={(value) => {
+            if (isSearchMode) return; // 搜尋模式時禁用
+            
             // 處理單個類別的切換
             if (typeof value === 'string') {
               handleClassToggle(value);
@@ -118,11 +146,11 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
           placeholder="請選擇類別"
           multiple={true}
           searchable={availableClasses.length > 5}
-          disabled={availableClasses.length === 0}
+          disabled={availableClasses.length === 0 || isSearchMode}
         />
         
         {/* 類別操作按鈕 */}
-        {availableClasses.length > 0 && (
+        {availableClasses.length > 0 && !isSearchMode && (
           <div className="mt-2 flex space-x-2">
             <button
               onClick={selectAllClasses}
@@ -149,6 +177,8 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
           options={availableSamples}
           value={selectedSamples}
           onChange={(value) => {
+            if (isSearchMode) return; // 搜尋模式時禁用
+            
             // 處理單個樣本的切換
             if (typeof value === 'string') {
               handleSampleToggle(value);
@@ -169,11 +199,11 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
           placeholder="請選擇樣本"
           multiple={true}
           searchable={availableSamples.length > 5}
-          disabled={availableSamples.length === 0}
+          disabled={availableSamples.length === 0 || isSearchMode}
         />
         
         {/* 樣本操作按鈕 */}
-        {availableSamples.length > 0 && (
+        {availableSamples.length > 0 && !isSearchMode && (
           <div className="mt-2 flex space-x-2">
             <button
               onClick={selectAllSamples}
@@ -193,55 +223,32 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
         )}
       </div>
 
-      {/* 搜尋框 */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          搜尋表格
-        </label>
-        <div className="relative">
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            placeholder="輸入表格名稱..."
-            className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-          />
-        </div>
-      </div>
-
       {/* 篩選摘要 */}
-      <div className="p-3 bg-gray-50 rounded-lg">
-        <div className="text-sm text-gray-600 space-y-1">
-          <div className="flex justify-between">
-            <span>市場：</span>
-            <span className="font-medium">{selectedMarket || '未選擇'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>面向：</span>
-            <span className="font-medium">{selectedAspect || '未選擇'}</span>
-          </div>
-          <div className="flex justify-between">
-            <span>類別：</span>
-            <span className="font-medium">{selectedClasses.length} 項</span>
-          </div>
-          <div className="flex justify-between">
-            <span>樣本：</span>
-            <span className="font-medium">{selectedSamples.length} 項</span>
-          </div>
-          
-          {/* 搜尋關鍵字 */}
-          {searchTerm && (
-            <div className="flex justify-between">
-              <span>搜尋：</span>
-              <span className="font-medium text-purple-600">"{searchTerm}"</span>
+      {filterSummary && (
+        <div className="bg-gray-50 rounded-lg p-4">
+          {/* 活躍篩選器 */}
+          {filterSummary.activeFilters.length > 0 && (
+            <div className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                活躍篩選器
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {filterSummary.activeFilters.map((filter, index) => (
+                  <span
+                    key={index}
+                    className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
+                  >
+                    {filter}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
           
           {/* 結果統計 */}
-          <div className="mt-3 pt-2 border-t border-gray-200">
+          <div className="pt-2 border-t border-gray-200">
             <div className="flex justify-between items-center">
-              <span>符合條件：</span>
+              <span className="text-sm text-gray-600">符合條件：</span>
               <span className="font-bold text-purple-600">
                 {filterSummary.filteredCount} / {filterSummary.totalCount} 個表格
               </span>
@@ -253,35 +260,16 @@ const FilterSection = ({ tableData, filterState, filterActions }) => {
             )}
           </div>
         </div>
+      )}
         
-        {/* 重設按鈕 */}
-        {hasActiveFilters && (
-          <button
-            onClick={resetAllFilters}
-            className="mt-3 w-full text-sm text-purple-600 hover:text-purple-700 py-1 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
-          >
-            重設所有篩選
-          </button>
-        )}
-      </div>
-
-      {/* 活躍篩選器標籤 */}
-      {filterSummary.activeFilters.length > 0 && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            活躍篩選器
-          </label>
-          <div className="flex flex-wrap gap-2">
-            {filterSummary.activeFilters.map((filter, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 bg-purple-100 text-purple-700 text-xs rounded-full"
-              >
-                {filter}
-              </span>
-            ))}
-          </div>
-        </div>
+      {/* 重設按鈕 */}
+      {hasActiveFilters && !isSearchMode && (
+        <button
+          onClick={resetAllFilters}
+          className="mt-3 w-full text-sm text-purple-600 hover:text-purple-700 py-1 border border-purple-200 rounded hover:bg-purple-50 transition-colors"
+        >
+          重設所有篩選
+        </button>
       )}
     </div>
   );
